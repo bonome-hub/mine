@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up / Sign In</title>
+  <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-auth.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f4f4f9;
+    }
+
+    .form-container {
+      width: 400px;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    .form-container h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .form-container form {
+      display: none;
+    }
+
+    .form-container form.active {
+      display: block;
+    }
+
+    .form-container input {
+      width: calc(100% - 20px);
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .form-container button {
+      width: 100%;
+      padding: 10px;
+      background-color: #007BFF;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .form-container button:hover {
+      background-color: #0056b3;
+    }
+
+    .toggle-link {
+      margin-top: 10px;
+      color: #007BFF;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .google-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #4285F4;
+      color: white;
+      padding: 10px;
+      margin-top: 15px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .google-btn img {
+      width: 20px;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="form-container">
+  <h2 id="form-title">Sign In</h2>
+  
+  <!-- Sign In Form -->
+  <form id="signin-form" class="active">
+    <input type="email" id="signin-email" placeholder="Email" required />
+    <input type="password" id="signin-password" placeholder="Password" required />
+    <button type="button" onclick="signInUser()">Sign In</button>
+    <div class="google-btn" onclick="signInWithGoogle()">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google Logo">
+      Sign In with Google
+    </div>
+  </form>
+
+  <!-- Sign Up Form -->
+  <form id="signup-form">
+    <input type="text" id="signup-name" placeholder="Full Name" required />
+    <input type="email" id="signup-email" placeholder="Email" required />
+    <input type="password" id="signup-password" placeholder="Password" required />
+    <button type="button" onclick="signUpUser()">Sign Up</button>
+    <div class="google-btn" onclick="signInWithGoogle()">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google Logo">
+      Sign Up with Google
+    </div>
+  </form>
+
+  <span class="toggle-link" onclick="toggleForm()">Don't have an account? Sign Up</span>
+</div>
+
+<script>
+  // Firebase Configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyCPCD-2tKMnvutEfjBWnAI3aqCjBeZ0l1U",
+    authDomain: "haraka-connect-limited.firebaseapp.com",
+    databaseURL: "https://haraka-connect-limited-default-rtdb.firebaseio.com",
+    projectId: "haraka-connect-limited",
+    storageBucket: "haraka-connect-limited.appspot.com",
+    messagingSenderId: "691594887843",
+    appId: "1:691594887843:web:0ccb7e91aa6c4f29a97516",
+    measurementId: "G-7ZEKB0LNMM"
+  };
+
+  // Initialize Firebase
+  const app = firebase.initializeApp(firebaseConfig);
+  const database = firebase.getDatabase(app);
+  const auth = firebase.getAuth(app);
+
+  const signinForm = document.getElementById('signin-form');
+  const signupForm = document.getElementById('signup-form');
+  const formTitle = document.getElementById('form-title');
+  const toggleLink = document.querySelector('.toggle-link');
+
+  function toggleForm() {
+    const isSignIn = signinForm.classList.contains('active');
+
+    if (isSignIn) {
+      signinForm.classList.remove('active');
+      signupForm.classList.add('active');
+      formTitle.textContent = 'Sign Up';
+      toggleLink.textContent = 'Already have an account? Sign In';
+    } else {
+      signupForm.classList.remove('active');
+      signinForm.classList.add('active');
+      formTitle.textContent = 'Sign In';
+      toggleLink.textContent = "Don't have an account? Sign Up";
+    }
+  }
+
+  function signInUser() {
+    const email = document.getElementById('signin-email').value;
+    const password = document.getElementById('signin-password').value;
+
+    firebase.signInWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        alert('Sign-in successful');
+      })
+      .catch((error) => {
+        alert('Sign-in error: ' + error.message);
+      });
+  }
+
+  function signUpUser() {
+    const name = document.getElementById('signup-name').value;
+    const email = document.getElementById('signup-email').value;
+    const password = document.getElementById('signup-password').value;
+
+    firebase.createUserWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        const user = userCredential.user;
+        firebase.set(firebase.ref(database, 'users/' + user.uid), {
+          name: name,
+          email: email
+        });
+        alert('Sign-up successful');
+      })
+      .catch((error) => {
+        alert('Sign-up error: ' + error.message);
+      });
+  }
+
+  function signInWithGoogle() {
+    const provider = new firebase.GoogleAuthProvider();
+    firebase.signInWithPopup(auth, provider)
+      .then((result) => {
+        const user = result.user;
+        firebase.set(firebase.ref(database, 'users/' + user.uid), {
+          name: user.displayName,
+          email: user.email
+        });
+        alert('Google Sign-in successful');
+      })
+      .catch((error) => {
+        alert('Google Sign-in error: ' + error.message);
+      });
+  }
+</script>
+
+</body>
+</html>
