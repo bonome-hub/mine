@@ -1,0 +1,10 @@
+{
+  "hosting": {
+    "public": "bonome",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}
